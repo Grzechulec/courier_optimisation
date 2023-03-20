@@ -3,9 +3,9 @@
     public class PathsFinder
     {
         private List<List<uint>> distanceMatrix_;
-        private List<int> clientsWeights_ = new() {9, 4, 1, 10, 5};
+        private List<int> _clientsWeights = new() {9, 4, 1, 10, 5};
         public List<List<int>> Paths { get; private set; } = new();
-        private const int carCapacity_ = 20;
+        private const int _carCapacity = 20;
 
         public PathsFinder()
         {
@@ -22,15 +22,15 @@
 
         public void generateInitialPaths() {
             var weightsIndex = new List<Tuple<int, int>>();
-            for (int i = 0; i < clientsWeights_.Count; ++i) 
+            for (int i = 0; i < _clientsWeights.Count; ++i) 
             {
-                weightsIndex.Add(new Tuple<int, int>(clientsWeights_[i], i));   
+                weightsIndex.Add(new Tuple<int, int>(_clientsWeights[i], i));   
             }
             weightsIndex = weightsIndex.OrderByDescending(x => x.Item1).ToList();
 
             while (weightsIndex.Count > 0) 
             {
-                var capLeft = carCapacity_;
+                var capLeft = _carCapacity;
                 Paths.Add(new List<int>());
                 while (weightsIndex.Count > 0 && weightsIndex.Last().Item1 <= capLeft) 
                 {
