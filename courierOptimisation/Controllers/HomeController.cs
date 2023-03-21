@@ -18,6 +18,11 @@ namespace courierOptimisation.Controllers
             var p = new PathsFinder();
             p.generateInitialPaths();
             p.traverseSolutions();
+            Console.WriteLine(p.bestPathsCost);
+            foreach (var path in p.bestPaths)
+            {
+                Console.WriteLine(String.Join(" ", path));
+            }
             return View();
         }
 
