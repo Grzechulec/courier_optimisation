@@ -15,6 +15,9 @@ namespace courierOptimisation.Controllers
 
         public IActionResult Index()
         {
+            var p = new PathsFinder();
+            p.generateInitialPaths();
+            p.traverseSolutions();
             return View();
         }
 
