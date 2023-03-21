@@ -16,7 +16,6 @@ namespace courierOptimisation.Controllers
         public IActionResult Index()
         {
             var p = new PathsFinder();
-            p.generateInitialPaths();
             p.traverseSolutions();
             Console.WriteLine(p.bestPathsCost);
             foreach (var path in p.bestPaths)

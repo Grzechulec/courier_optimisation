@@ -1,45 +1,47 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using Microsoft.AspNetCore.Routing.Template;
+using Microsoft.CodeAnalysis;
+using static courierOptimisation.NeighbourData;
 
 namespace courierOptimisation
 {
     class NeighbourData
     {
+        public enum ActionType {Insert, Swap};
         public const int defaultCost = int.MaxValue;
-        public int pathFrom;
-        public int fromIndex;
-        public int pathTo;
-        public int toIndex;
+        public int pathFirst;
+        public int firstIndex;
+        public int pathSecond;
+        public int secondIndex;
         public int cost = defaultCost;
-    }
+        public ActionType neighborType;
 
-    class TabuNode
-    {
-        public const int initVal = -1;
-        public int clientIndex;
-        public int pathIndex;
-
-        public TabuNode(int clientIn = initVal, int pathIn = initVal)
+        public NeighbourData(ActionType type)
         {
-            clientIndex = clientIn;
-            pathIndex = pathIn;
+            neighborType = type;
         }
     }
 
-    public class PathsFinder
+    class PathsFinder
     {
         private const int _carCapacity = 15;
-        //private readonly List<List<int>> _distanceMatrix;
         //private readonly List<int> _clientsWeights = new() { 0, 9, 4, 1, 10, 5 };
         private readonly List<int> _clientsWeights = new() { 0, 1, 1, 2, 4, 2, 4, 8, 8, 1, 2, 1, 2, 4, 4, 8, 8 };
-        private List<List<int>> _paths = new();
-        private List<int> _pathsWeights = new();
+        private List<List<int>> _paths;
+        private List<int> _pathsWeights;
         private int _currentCost;
-        private List<TabuNode> _tabuList;
-        private int _currentTabuIndex = 0;
+        private TabuList _tabuList;
 
-        public List<List<int>> bestPaths { get; private set; } = new();
+        public List<List<int>> bestPaths { get; private set; }
         public int bestPathsCost { get; private set; } = int.MaxValue;
 
+        //private readonly List<List<int>> _distanceMatrix = new() {
+        //    new() {0, 2, 2, 8, 9, 8},
+        //    new() {2, 0, 3, 12, 10, 5},
+        //    new() {2, 3, 0, 6, 10, 12},
+        //    new() {8, 12, 6, 0, 1, 3},
+        //    new() {9, 10, 10, 1, 0, 2},
+        //    new() {8, 5, 12, 3, 2, 0}
+        //};
         public List<List<int>> _distanceMatrix = new() {
             new() { 0, 548, 776, 696, 582, 274, 502, 194, 308, 194, 536, 502, 388, 354, 468, 776, 662 },
             new() { 548, 0, 684, 308, 194, 502, 730, 354, 696, 742, 1084, 594, 480, 674, 1016, 868, 1210 },
@@ -62,25 +64,13 @@ namespace courierOptimisation
 
         public PathsFinder()
         {
-            //_distanceMatrix = new List<List<int>>()
-            //{
-            //    new() {0, 2, 2, 8, 9, 8},
-            //    new() {2, 0, 3, 12, 10, 5},
-            //    new() {2, 3, 0, 6, 10, 12},
-            //    new() {8, 12, 6, 0, 1, 3},
-            //    new() {9, 10, 10, 1, 0, 2},
-            //    new() {8, 5, 12, 3, 2, 0}
-            //};
-
-            const int tabuListSize = 14;
-            _tabuList = new List<TabuNode>();
-            for (int i = 0; i < tabuListSize; ++i)
-            {
-                _tabuList.Add(new TabuNode());
-            }
+            this.generateInitialPaths();
         }
 
         public void generateInitialPaths() {
+            _paths = new();
+            _tabuList = new();
+
             var weightsIndex = new List<Tuple<int, int>>(); // (weight, index)
             for (int i = 1; i < _clientsWeights.Count; ++i) 
             {
@@ -112,9 +102,7 @@ namespace courierOptimisation
 
             _pathsWeights = new List<int>(new int[_paths.Count]);
             this.countCurrentPathsWeights();
-            List<int> list = new List<int>();
-            for (int i = 0; i < _paths.Count; ++i) { list.Add(i); }
-            this.orderPathsClients(list);
+            this.orderPathsClients(Enumerable.Range(0, _paths.Count));
             this.updateBestPaths();
         }
 
@@ -123,38 +111,54 @@ namespace courierOptimisation
             int iterations = (int)(300 * Math.Sqrt(_clientsWeights.Count));
             for (int i = 0; i < iterations; ++i)
             {
-                var firstOpt = this.findBestInsertNeighbour();
-                var secondOpt = this.findBestSwapNeighbour();
-                if (!firstOpt.HasValue)
+                var insertOpt = this.findBestInsertNeighbour();
+                var swapOpt = this.findBestSwapNeighbour();
+                var bestOpt = this.getBestNeighbour(insertOpt, swapOpt);
+                if (!bestOpt.HasValue)
                 {
-                    if (!secondOpt.HasValue)
-                    {
-                        this.resetTabuList();
-                        this.goFromCurrentToBestSolution();
-                    }
-                    else
-                    {
-                        this.updateTabuListAfterSwap(secondOpt.Value);
-                        this.goFromCurrentToSwapNeighbour(secondOpt.Value);
-                        this.orderPathsClients(new() { secondOpt.Value.pathFrom, secondOpt.Value.pathTo });
-                        this.updateBestPaths();
-                    }
-                }
-                else if (secondOpt.HasValue && secondOpt.Value.cost < firstOpt.Value.cost)
-                {
-                    this.updateTabuListAfterSwap(secondOpt.Value);
-                    this.goFromCurrentToSwapNeighbour(secondOpt.Value);
-                    this.orderPathsClients(new() { secondOpt.Value.pathFrom, secondOpt.Value.pathTo });
-                    this.updateBestPaths();
+                    _tabuList.resetTabuList();
+                    this.goFromCurrentToBestSolution();
                 }
                 else
                 {
-                    this.updateTabuListAfterInsert(firstOpt.Value);
-                    this.goFromCurrentToInsertNeighbour(firstOpt.Value);
-                    this.orderPathsClients(new() { firstOpt.Value.pathFrom, firstOpt.Value.pathTo });
+                    var neighbour = bestOpt.Value;
+                    List<TabuNode> tabuNodesList;
+                    var pathsToOrder = new List<int> { neighbour.pathFirst, neighbour.pathSecond };
+
+                    if (neighbour.neighborType == ActionType.Insert)
+                    {
+                        var tabuNode = new TabuNode(_paths[neighbour.pathFirst][neighbour.firstIndex], neighbour.pathFirst);
+                        tabuNodesList = new List<TabuNode>() { tabuNode };
+                    }
+                    else
+                    {
+                        var firstNode = new TabuNode(_paths[neighbour.pathFirst][neighbour.firstIndex], neighbour.pathFirst);
+                        var secondNode = new TabuNode(_paths[neighbour.pathSecond][neighbour.secondIndex], neighbour.pathSecond);
+                        tabuNodesList = new List<TabuNode>() { firstNode, secondNode };
+                    }
+                    _tabuList.updateTabuList(tabuNodesList);
+                    this.goFromCurrentToNeighbour(neighbour);
+                    this.orderPathsClients(pathsToOrder);
                     this.updateBestPaths();
                 }
             }
+        }
+
+        private Optional<NeighbourData> getBestNeighbour(Optional<NeighbourData> firstOpt, Optional<NeighbourData> secondOpt)
+        {
+            if (!firstOpt.HasValue && !secondOpt.HasValue)
+            {
+                return firstOpt;
+            }
+            if (!firstOpt.HasValue)
+            {
+                return secondOpt;
+            }
+            if (!secondOpt.HasValue)
+            {
+                return firstOpt;
+            }
+            return (firstOpt.Value.cost < secondOpt.Value.cost) ? firstOpt : secondOpt;
         }
 
         private void countCurrentPathsWeights()
@@ -171,7 +175,7 @@ namespace courierOptimisation
             }
         }
 
-        private void orderPathsClients(List<int> pathsIndexes)
+        private void orderPathsClients(IEnumerable<int> pathsIndexes)
         {
             foreach (var index in pathsIndexes)
             {
@@ -235,56 +239,63 @@ namespace courierOptimisation
 
         private Optional<NeighbourData> findBestInsertNeighbour()
         {
-            var bestNeighbour = new NeighbourData();
+            const int minPathSize = 3;
+            var bestNeighbour = new NeighbourData(ActionType.Insert);
             for (int pathFrom = 0; pathFrom < _paths.Count; ++pathFrom)
             {
-                if (_paths[pathFrom].Count <= 3)
+                var Path1 = _paths[pathFrom];
+                if (Path1.Count <= minPathSize)
                 {
                     continue;
                 }
                 for (int pathTo = 0; pathTo < _paths.Count; ++pathTo)
                 {
+                    var Path2 = _paths[pathTo];
                     if (pathTo == pathFrom)
                     {
                         continue;
                     }
-                    for (int fromIndex = 1; fromIndex < _paths[pathFrom].Count - 1; ++fromIndex)
+                    for (int fromIndex = 1; fromIndex < Path1.Count - 1; ++fromIndex)
                     {
-                        if (this.isOnTabuList(_paths[pathFrom][fromIndex], pathTo) ||
-                            this.isClientToHeavyToInsert(_clientsWeights[_paths[pathFrom][fromIndex]], _pathsWeights[pathTo]))
+                        if (_tabuList.isOnTabuList(Path1[fromIndex], pathTo) ||
+                            this.isClientToHeavyToInsert(_clientsWeights[Path1[fromIndex]], _pathsWeights[pathTo]))
                         {
                             continue;
                         }
-                        for (int toIndex = 1; toIndex < _paths[pathTo].Count; ++toIndex)
+                        for (int toIndex = 1; toIndex < Path2.Count; ++toIndex)
                         {
-                            var neighbourCost = _currentCost;
-                            neighbourCost -= _distanceMatrix[_paths[pathFrom][fromIndex - 1]][_paths[pathFrom][fromIndex]];
-                            neighbourCost -= _distanceMatrix[_paths[pathFrom][fromIndex]][_paths[pathFrom][fromIndex + 1]];
-                            neighbourCost += _distanceMatrix[_paths[pathFrom][fromIndex - 1]][_paths[pathFrom][fromIndex + 1]];
-
-                            neighbourCost -= _distanceMatrix[_paths[pathTo][toIndex - 1]][_paths[pathTo][toIndex]];
-                            neighbourCost += _distanceMatrix[_paths[pathTo][toIndex - 1]][_paths[pathFrom][fromIndex]];
-                            neighbourCost += _distanceMatrix[_paths[pathFrom][fromIndex]][_paths[pathTo][toIndex]];
-
+                            var neighbourCost = getInsertNeighbourCost(Path1, fromIndex, Path2, toIndex);
                             if (neighbourCost < bestNeighbour.cost)
                             {
-                                bestNeighbour.pathFrom = pathFrom;
-                                bestNeighbour.fromIndex = fromIndex;
-                                bestNeighbour.pathTo = pathTo;
-                                bestNeighbour.toIndex = toIndex;
+                                bestNeighbour.pathFirst = pathFrom;
+                                bestNeighbour.firstIndex = fromIndex;
+                                bestNeighbour.pathSecond = pathTo;
+                                bestNeighbour.secondIndex = toIndex;
                                 bestNeighbour.cost = neighbourCost;
                             }
                         }
                     }
                 }
             }
-
             return (bestNeighbour.cost == NeighbourData.defaultCost) ? new Optional<NeighbourData>() : bestNeighbour;
+        }
+
+        private int getInsertNeighbourCost(List<int> Path1, int fromIndex, List<int> Path2, int toIndex)
+        {
+            var neighbourCost = _currentCost;
+            neighbourCost -= _distanceMatrix[Path1[fromIndex - 1]][Path1[fromIndex]];
+            neighbourCost -= _distanceMatrix[Path1[fromIndex]][Path1[fromIndex + 1]];
+            neighbourCost += _distanceMatrix[Path1[fromIndex - 1]][Path1[fromIndex + 1]];
+
+            neighbourCost -= _distanceMatrix[Path2[toIndex - 1]][Path2[toIndex]];
+            neighbourCost += _distanceMatrix[Path2[toIndex - 1]][Path1[fromIndex]];
+            neighbourCost += _distanceMatrix[Path1[fromIndex]][Path2[toIndex]];
+            return neighbourCost;
         }
 
         private Optional<NeighbourData> findBestSwapNeighbour()
         {
-            var bestNeighbour = new NeighbourData();
+            var bestNeighbour = new NeighbourData(ActionType.Swap);
             for (int pathFirst = 0; pathFirst < _paths.Count; ++pathFirst)
             {
                 var Path1 = _paths[pathFirst];
@@ -297,66 +308,82 @@ namespace courierOptimisation
                     }
                     for (int firstIndex = 1; firstIndex < Path1.Count - 1; ++firstIndex)
                     {
-                        if (this.isOnTabuList(Path1[firstIndex], pathSecond))
+                        if (_tabuList.isOnTabuList(Path1[firstIndex], pathSecond))
                         {
                             continue;
                         }
                         for (int secondIndex = 1; secondIndex < Path2.Count - 1; ++secondIndex)
                         {
-                            if (this.isOnTabuList(Path2[secondIndex], pathFirst) ||
+                            if (_tabuList.isOnTabuList(Path2[secondIndex], pathFirst) ||
                                 this.isSwapWeightToBig(_clientsWeights[Path1[firstIndex]], _pathsWeights[pathFirst],
                                                        _clientsWeights[Path2[secondIndex]], _pathsWeights[pathSecond]))
                             {
                                 continue;
                             }
 
-                            var neighbourCost = _currentCost;
-                            neighbourCost -= _distanceMatrix[Path1[firstIndex - 1]][Path1[firstIndex]];
-                            neighbourCost -= _distanceMatrix[Path1[firstIndex]][Path1[firstIndex + 1]];
-                            neighbourCost += _distanceMatrix[Path1[firstIndex - 1]][Path2[secondIndex]];
-                            neighbourCost += _distanceMatrix[Path2[secondIndex]][Path1[firstIndex + 1]];
-
-                            neighbourCost -= _distanceMatrix[Path2[secondIndex - 1]][Path2[secondIndex]];
-                            neighbourCost -= _distanceMatrix[Path2[secondIndex]][Path2[secondIndex + 1]];
-                            neighbourCost += _distanceMatrix[Path2[secondIndex - 1]][Path1[firstIndex]];
-                            neighbourCost += _distanceMatrix[Path1[firstIndex]][Path2[secondIndex + 1]];
-
+                            var neighbourCost = getSwapNeighbourCost(Path1, firstIndex, Path2, secondIndex);
                             if (neighbourCost < bestNeighbour.cost)
                             {
-                                bestNeighbour.pathFrom = pathFirst;
-                                bestNeighbour.fromIndex = firstIndex;
-                                bestNeighbour.pathTo = pathSecond;
-                                bestNeighbour.toIndex = secondIndex;
+                                bestNeighbour.pathFirst = pathFirst;
+                                bestNeighbour.firstIndex = firstIndex;
+                                bestNeighbour.pathSecond = pathSecond;
+                                bestNeighbour.secondIndex = secondIndex;
                                 bestNeighbour.cost = neighbourCost;
                             }
                         }
                     }
                 }
             }
-
             return (bestNeighbour.cost == NeighbourData.defaultCost) ? new Optional<NeighbourData>() : bestNeighbour;
+        }
+
+        private int getSwapNeighbourCost(List<int> Path1, int firstIndex, List<int> Path2, int secondIndex)
+        {
+            var neighbourCost = _currentCost;
+            neighbourCost -= _distanceMatrix[Path1[firstIndex - 1]][Path1[firstIndex]];
+            neighbourCost -= _distanceMatrix[Path1[firstIndex]][Path1[firstIndex + 1]];
+            neighbourCost += _distanceMatrix[Path1[firstIndex - 1]][Path2[secondIndex]];
+            neighbourCost += _distanceMatrix[Path2[secondIndex]][Path1[firstIndex + 1]];
+
+            neighbourCost -= _distanceMatrix[Path2[secondIndex - 1]][Path2[secondIndex]];
+            neighbourCost -= _distanceMatrix[Path2[secondIndex]][Path2[secondIndex + 1]];
+            neighbourCost += _distanceMatrix[Path2[secondIndex - 1]][Path1[firstIndex]];
+            neighbourCost += _distanceMatrix[Path1[firstIndex]][Path2[secondIndex + 1]];
+            return neighbourCost;
+        }
+
+        private void goFromCurrentToNeighbour(NeighbourData n)
+        {
+            if (n.neighborType == ActionType.Insert)
+            {
+                this.goFromCurrentToInsertNeighbour(n);
+            }
+            else
+            {
+                this.goFromCurrentToSwapNeighbour(n);
+            }
         }
 
         private void goFromCurrentToInsertNeighbour(NeighbourData n)
         {
             _currentCost = n.cost;
-            var clientIndex = _paths[n.pathFrom][n.fromIndex];
-            _pathsWeights[n.pathFrom] -= _clientsWeights[_paths[n.pathFrom][n.fromIndex]];
-            _pathsWeights[n.pathTo] += _clientsWeights[_paths[n.pathFrom][n.fromIndex]];
-            _paths[n.pathFrom].RemoveAt(n.fromIndex);
-            _paths[n.pathTo].Insert(n.toIndex, clientIndex);
+            var clientIndex = _paths[n.pathFirst][n.firstIndex];
+            _pathsWeights[n.pathFirst] -= _clientsWeights[_paths[n.pathFirst][n.firstIndex]];
+            _pathsWeights[n.pathSecond] += _clientsWeights[_paths[n.pathFirst][n.firstIndex]];
+            _paths[n.pathFirst].RemoveAt(n.firstIndex);
+            _paths[n.pathSecond].Insert(n.secondIndex, clientIndex);
         }
 
         private void goFromCurrentToSwapNeighbour(NeighbourData n)
         {
             _currentCost = n.cost;
-            _pathsWeights[n.pathFrom] -= _clientsWeights[_paths[n.pathFrom][n.fromIndex]];
-            _pathsWeights[n.pathFrom] += _clientsWeights[_paths[n.pathTo][n.toIndex]];
+            _pathsWeights[n.pathFirst] -= _clientsWeights[_paths[n.pathFirst][n.firstIndex]];
+            _pathsWeights[n.pathFirst] += _clientsWeights[_paths[n.pathSecond][n.secondIndex]];
 
-            _pathsWeights[n.pathTo] -= _clientsWeights[_paths[n.pathTo][n.toIndex]];
-            _pathsWeights[n.pathTo] += _clientsWeights[_paths[n.pathFrom][n.fromIndex]];
+            _pathsWeights[n.pathSecond] -= _clientsWeights[_paths[n.pathSecond][n.secondIndex]];
+            _pathsWeights[n.pathSecond] += _clientsWeights[_paths[n.pathFirst][n.firstIndex]];
 
-            (_paths[n.pathFrom][n.fromIndex], _paths[n.pathTo][n.toIndex]) = (_paths[n.pathTo][n.toIndex], _paths[n.pathFrom][n.fromIndex]);
+            (_paths[n.pathFirst][n.firstIndex], _paths[n.pathSecond][n.secondIndex]) = (_paths[n.pathSecond][n.secondIndex], _paths[n.pathFirst][n.firstIndex]);
         }
 
         private void updateBestPaths()
@@ -373,47 +400,6 @@ namespace courierOptimisation
                     bestPaths[^1][i] = path[i];
                 }
             }
-        }
-
-        private void updateTabuListAfterInsert(NeighbourData n)
-        {
-            _tabuList[_currentTabuIndex] = new TabuNode(_paths[n.pathFrom][n.fromIndex], n.pathFrom);
-            ++_currentTabuIndex;
-            if (_currentTabuIndex >= _tabuList.Count)
-            {
-                _currentTabuIndex = 0;
-            }
-        }
-
-        private void updateTabuListAfterSwap(NeighbourData n)
-        {
-            _tabuList[_currentTabuIndex] = new TabuNode(_paths[n.pathFrom][n.fromIndex], n.pathFrom);
-            ++_currentTabuIndex;
-            if (_currentTabuIndex >= _tabuList.Count)
-            {
-                _currentTabuIndex = 0;
-            }
-            _tabuList[_currentTabuIndex] = new TabuNode(_paths[n.pathTo][n.toIndex], n.pathTo);
-            ++_currentTabuIndex;
-            if (_currentTabuIndex >= _tabuList.Count)
-            {
-                _currentTabuIndex = 0;
-            }
-        }
-
-        private bool isOnTabuList(int clientIndex, int pathIndex)
-        {
-            return _tabuList.FindIndex(node => node.clientIndex == clientIndex && node.pathIndex == pathIndex) >= 0;
-        }
-
-        private void resetTabuList()
-        {
-            for (int i = 0; i < _tabuList.Count; ++i)
-            {
-                _tabuList[i].clientIndex = TabuNode.initVal;
-                _tabuList[i].pathIndex = TabuNode.initVal;
-            }
-            _currentTabuIndex = 0;
         }
 
         private void goFromCurrentToBestSolution()
