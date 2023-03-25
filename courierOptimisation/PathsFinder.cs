@@ -26,12 +26,12 @@ namespace courierOptimisation
         private const int _carCapacity = 15;
         //private readonly List<int> _clientsWeights = new() { 0, 9, 4, 1, 10, 5 };
         private readonly List<int> _clientsWeights = new() { 0, 1, 1, 2, 4, 2, 4, 8, 8, 1, 2, 1, 2, 4, 4, 8, 8 };
-        private List<List<int>> _paths;
-        private List<int> _pathsWeights;
+        private List<List<int>> _paths = new();
+        private List<int> _pathsWeights = new();
         private int _currentCost;
-        private TabuList _tabuList;
+        private TabuList _tabuList = new();
 
-        public List<List<int>> bestPaths { get; private set; }
+        public List<List<int>> bestPaths { get; private set; } = new();
         public int bestPathsCost { get; private set; } = int.MaxValue;
 
         //private readonly List<List<int>> _distanceMatrix = new() {
@@ -68,8 +68,8 @@ namespace courierOptimisation
         }
 
         public void generateInitialPaths() {
-            _paths = new();
-            _tabuList = new();
+            _paths.Clear();
+            _tabuList.resetTabuList();
 
             var weightsIndex = new List<Tuple<int, int>>(); // (weight, index)
             for (int i = 1; i < _clientsWeights.Count; ++i) 
@@ -100,7 +100,7 @@ namespace courierOptimisation
                 _paths.Last().Add(0);
             }
 
-            _pathsWeights = new List<int>(new int[_paths.Count]);
+            _pathsWeights.AddRange(new int[_paths.Count]);
             this.countCurrentPathsWeights();
             this.orderPathsClients(Enumerable.Range(0, _paths.Count));
             this.updateBestPaths();
@@ -391,7 +391,7 @@ namespace courierOptimisation
             if (_currentCost >= bestPathsCost) return;
 
             bestPathsCost = _currentCost;
-            bestPaths = new();
+            bestPaths.Clear();
             foreach (var path in _paths)
             {
                 bestPaths.Add(new List<int>(new int[path.Count]));
