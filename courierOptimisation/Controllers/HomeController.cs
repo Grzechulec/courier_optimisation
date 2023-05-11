@@ -22,7 +22,7 @@ namespace courierOptimisation.Controllers
             {
                 Console.WriteLine(String.Join(" ", path));
             }
-            return View();
+            return View(p.bestPaths);
         }
 
         public IActionResult Privacy()
