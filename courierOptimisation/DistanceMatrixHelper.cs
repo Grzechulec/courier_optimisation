@@ -1,4 +1,6 @@
-﻿namespace courierOptimisation
+﻿using Microsoft.AspNetCore.Mvc;
+
+namespace courierOptimisation
 {
     public static class DistanceMatrixHelper
     {
@@ -10,7 +12,7 @@
         //to test
         public static List<List<int>> GenerateDistanceMatrix(List<(int, int)> points)
         {
-            List<List<int>> distanceMatrix = new List<List<int>>();
+            List<List<int>> distanceMatrix = new();
             foreach (var point in points)
             {
                 AddPoint(point, points, distanceMatrix);
@@ -21,7 +23,12 @@
         //to test
         public static void AddPoint((int, int) point, List<(int, int)> points, List<List<int>> distanceMatrix)
         {
-            for (int i = 0; i < points.Count; i++)
+            if (distanceMatrix.Count == 0)
+            {
+                distanceMatrix.Add(new List<int>() { 0 });
+                return;
+            }
+            for (int i = 0; i < distanceMatrix.Count; i++)
             {
                 UpdateRow(point, points[i], distanceMatrix[i]);
             }
@@ -37,10 +44,11 @@
         private static void AddNewRow((int, int) newPoint, List<(int, int)> points, List<List<int>> distanceMatrix)
         {
             List<int> row = new();
-            foreach (var point in points)
+            for (int i = 0; i < distanceMatrix.Count; i++)
             {
-                row.Add(GetDistance(point, newPoint));
+                row.Add(GetDistance(points[i], newPoint));
             }
+            row.Add(0);
             distanceMatrix.Add(row);
         }
 

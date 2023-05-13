@@ -22,6 +22,8 @@ namespace courierOptimisation.Controllers
             {
                 Console.WriteLine(String.Join(" ", path));
             }
+            List<(int, int)> points = new() { (1, 1), (2, 2), (3,3) };
+            var test = DistanceMatrixHelper.GenerateDistanceMatrix(points);
             return View(p.bestPaths);
         }
 
