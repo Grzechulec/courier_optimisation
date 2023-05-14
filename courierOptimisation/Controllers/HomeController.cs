@@ -22,9 +22,9 @@ namespace courierOptimisation.Controllers
             {
                 Console.WriteLine(String.Join(" ", path));
             }
-            List<(int, int)> points = new() { (1, 1), (2, 2), (3,3) };
+            List<(int, int)> points = new() { (0, 0), (0, 3), (4, 0), (99, 99) };
             var test = DistanceMatrixHelper.GenerateDistanceMatrix(points);
-            return View(p.bestPaths);
+            return View(test);
         }
 
         public IActionResult Privacy()
