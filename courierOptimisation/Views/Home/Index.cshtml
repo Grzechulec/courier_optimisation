@@ -14,3 +14,17 @@
        value="Go Somewhere Else"
        onclick="location.href='@Url.Action("Test", "Home")'" />
 
+
+@using (Html.BeginForm("Upload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <input type="file" name="file" />
+    <input type="submit" value="Wyślij" />
+}
+
+@if (ViewBag.FileContent != null)
+{
+    <h2>Zawartość pliku:</h2>
+    <p>@ViewBag.FileContent</p>
+}
+
+

@@ -1,6 +1,9 @@
 ﻿using courierOptimisation.Models;
+using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.Text;
+using System.Web;
 
 namespace courierOptimisation.Controllers
 {
@@ -32,6 +35,24 @@ namespace courierOptimisation.Controllers
             var test = DistanceMatrixHelper.GenerateDistanceMatrix(points);
             //return View(test);
             return View("Index", test);
+        }
+
+        [HttpPost]
+        public IActionResult Upload(IFormFile file)
+        {
+            string? fileContent = null;
+
+            if (file != null)
+            {
+                using (var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8))
+                {
+                    fileContent = reader.ReadToEnd();
+                }
+            }
+
+            ViewBag.FileContent = fileContent;
+
+            return View("Index");
         }
 
         public IActionResult Privacy()
