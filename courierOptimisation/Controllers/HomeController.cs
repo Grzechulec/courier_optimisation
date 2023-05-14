@@ -22,9 +22,16 @@ namespace courierOptimisation.Controllers
             {
                 Console.WriteLine(String.Join(" ", path));
             }
+            return View(new List<List<int>>() );
+        }
+
+        public IActionResult Test()
+        {
+            Console.WriteLine("aaa");
             List<(int, int)> points = new() { (0, 0), (0, 3), (4, 0), (99, 99) };
             var test = DistanceMatrixHelper.GenerateDistanceMatrix(points);
-            return View(test);
+            //return View(test);
+            return View("Index", test);
         }
 
         public IActionResult Privacy()
