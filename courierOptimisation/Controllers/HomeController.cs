@@ -10,10 +10,13 @@ namespace courierOptimisation.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
+        private IndexModel _model;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ILogger<HomeController> logger,
+            IndexModel model)
         {
             _logger = logger;
+            _model = model;
         }
 
         public IActionResult Index()
@@ -25,16 +28,15 @@ namespace courierOptimisation.Controllers
             {
                 Console.WriteLine(String.Join(" ", path));
             }
-            return View(new List<List<int>>() );
+            return View(_model);
         }
 
         public IActionResult Test()
         {
             Console.WriteLine("aaa");
             List<(int, int)> points = new() { (0, 0), (0, 3), (4, 0), (99, 99) };
-            var test = DistanceMatrixHelper.GenerateDistanceMatrix(points);
-            //return View(test);
-            return View("Index", test);
+            _model.Paths = DistanceMatrixHelper.GenerateDistanceMatrix(points);
+            return View("Index", _model);
         }
 
         [HttpPost]
