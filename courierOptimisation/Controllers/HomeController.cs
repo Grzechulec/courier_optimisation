@@ -54,7 +54,7 @@ namespace courierOptimisation.Controllers
 
             ViewBag.FileContent = fileContent;
 
-            return View("Index");
+            return View("Index", _model);
         }
 
         public IActionResult Privacy()
