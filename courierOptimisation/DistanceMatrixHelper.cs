@@ -56,5 +56,16 @@ namespace courierOptimisation
         {
             return (int)Math.Sqrt(Math.Pow(point2.Item1 - point1.Item1, 2) + Math.Pow(point2.Item2 - point1.Item2, 2));
         }
+
+        public static List<(int, int)> ConvertStringsToPoints(List<string> strings)
+        {
+            List<(int, int)> points = new();
+            foreach (string s in strings)
+            {
+                string[] numbers = s.Split(' ');
+                points.Add((int.Parse(numbers[0]), int.Parse(numbers[1])));
+            }
+            return points;
+        }
     }
 }

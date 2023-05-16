@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using System.IO.Pipelines;
 using System.Text;
 using System.Web;
 
@@ -35,24 +36,27 @@ namespace courierOptimisation.Controllers
         {
             Console.WriteLine("aaa");
             List<(int, int)> points = new() { (0, 0), (0, 3), (4, 0), (99, 99) };
-            _model.Paths = DistanceMatrixHelper.GenerateDistanceMatrix(points);
+            _model.Paths = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
             return View("Index", _model);
         }
 
         [HttpPost]
         public IActionResult Upload(IFormFile file)
         {
-            string? fileContent = null;
+            List<string> fileContent = new();
 
             if (file != null)
             {
+                string? line;
                 using (var reader = new StreamReader(file.OpenReadStream(), Encoding.UTF8))
                 {
-                    fileContent = reader.ReadToEnd();
+                    while((line = reader.ReadLine()) != null)
+                    {
+                        fileContent.Add(line);
+                    }
                 }
             }
-
-            ViewBag.FileContent = fileContent;
+            _model.Points = DistanceMatrixHelper.ConvertStringsToPoints(fileContent);
 
             return View("Index", _model);
         }
