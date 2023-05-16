@@ -1,3 +1,4 @@
+using courierOptimisation;
 using courierOptimisation.Models;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -5,6 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IndexModel, IndexModel>();
+builder.Services.AddSingleton<PathsFinder, PathsFinder>();
 
 var app = builder.Build();
 

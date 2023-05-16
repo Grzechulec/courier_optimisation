@@ -6,12 +6,21 @@
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
+
+<div>
+    @foreach (var point in Model.Points)
+    {
+        @String.Join(", ", point); <br />
+    }
+</div>
+<div>
     @foreach (var path in Model.Paths)
     {
-        <div>@String.Join(" ", path);</div>
+        @String.Join(" ", path); <br />
     }
+</div>
 <input type="button"
-       value="Go Somewhere Else"
+       value="Generate Matrix"
        onclick="location.href='@Url.Action("Test", "Home")'" />
 
 
@@ -20,11 +29,3 @@
     <input type="file" name="file" />
     <input type="submit" value="Wyślij" />
 }
-
-@if (ViewBag.FileContent != null)
-{
-    <h2>Zawartość pliku:</h2>
-    <p>@ViewBag.FileContent</p>
-}
-
-

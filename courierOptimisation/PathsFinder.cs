@@ -21,7 +21,7 @@ namespace courierOptimisation
         }
     }
 
-    class PathsFinder
+    public class PathsFinder
     {
         private const int _carCapacity = 15;
         //private readonly List<int> _clientsWeights = new() { 0, 9, 4, 1, 10, 5 };

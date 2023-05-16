@@ -12,31 +12,26 @@ namespace courierOptimisation.Controllers
     {
         private readonly ILogger<HomeController> _logger;
         private IndexModel _model;
+        private PathsFinder _pathsFinder;
 
         public HomeController(ILogger<HomeController> logger,
-            IndexModel model)
+            IndexModel model, PathsFinder pathsFinder)
         {
             _logger = logger;
             _model = model;
+            _pathsFinder = pathsFinder;
         }
 
         public IActionResult Index()
         {
-            var p = new PathsFinder();
-            p.traverseSolutions();
-            Console.WriteLine(p.bestPathsCost);
-            foreach (var path in p.bestPaths)
-            {
-                Console.WriteLine(String.Join(" ", path));
-            }
             return View(_model);
         }
 
         public IActionResult Test()
         {
-            Console.WriteLine("aaa");
-            List<(int, int)> points = new() { (0, 0), (0, 3), (4, 0), (99, 99) };
-            _model.Paths = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
+            _model.DistanceMatrix = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
+            _pathsFinder.traverseSolutions();
+            _model.Paths = _pathsFinder.bestPaths;
             return View("Index", _model);
         }
 
