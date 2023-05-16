@@ -30,6 +30,7 @@ namespace courierOptimisation.Controllers
         public IActionResult Test()
         {
             _model.DistanceMatrix = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
+            _pathsFinder._distanceMatrix = _model.DistanceMatrix;
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
             return View("Index", _model);
