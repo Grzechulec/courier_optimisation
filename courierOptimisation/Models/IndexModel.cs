@@ -1,4 +1,6 @@
-﻿namespace courierOptimisation.Models
+﻿using System.Text.Json;
+
+namespace courierOptimisation.Models
 {
     public class IndexModel
     {
@@ -10,6 +12,11 @@
             Paths = new List<List<int>>();
             DistanceMatrix = new List<List<int>>();
             Points = new List<(int, int)>();
+        }
+        public string PointsToJson()
+        {
+            string json = JsonSerializer.Serialize(Points);
+            return json;
         }
     }
 }

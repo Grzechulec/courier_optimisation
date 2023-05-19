@@ -33,6 +33,7 @@ namespace courierOptimisation.Controllers
             _pathsFinder._distanceMatrix = _model.DistanceMatrix;
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
+            string test = _model.PointsToJson();
             return View("Index", _model);
         }
 

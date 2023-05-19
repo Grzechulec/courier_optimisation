@@ -1,24 +1,15 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<body>
+    <link rel="stylesheet" type="text/css" href="~/style.css" />
+</body>
 
 <div class="text-center">
     <h1 class="display-4">Welcome</h1>
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
 
-<div>
-    @foreach (var point in Model.Points)
-    {
-        @String.Join(", ", point); <br />
-    }
-</div>
-<div>
-    @foreach (var path in Model.Paths)
-    {
-        @String.Join(" ", path); <br />
-    }
-</div>
 <input type="button"
        value="Generate Paths"
        onclick="location.href='@Url.Action("Test", "Home")'" />
@@ -29,3 +20,50 @@
     <input type="file" name="file" />
     <input type="submit" value="Wyślij" />
 }
+
+
+<div class="container">
+    <div class="left">
+        <div class="top">
+            @foreach (var point in Model.Points)
+            {
+                @String.Join(", ", point);
+                <br />
+            }
+        </div>
+        <div class="bottom">
+            @foreach (var path in Model.Paths)
+            {
+                @String.Join(" ", path);
+                <br />
+            }
+        </div>
+    </div>
+    <div class="right">
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+    </div>
+</div>
+
+<script>
+    var canvas = document.getElementById('myCanvas');
+    var context = canvas.getContext('2d');
+
+    // Tutaj możesz dodać kod do rysowania na canvas
+    context.fillStyle = 'lightgray';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    // Przykładowe rysowanie prostokąta
+    context.fillStyle = 'red';
+    context.fillRect(50, 50, 200, 100);
+
+    console.log(@Html.Raw(Json.Serialize(Model.Points)));
+    var myList = [];
+    @foreach (var point in Model.Points)
+    {
+        
+    }
+    // Przykładowe użycie listy w JavaScript
+    for (var i = 0; i < myList.length; i++) {
+        var item = myList[i];
+        console.log('Item ' + (i + 1) + ': (' + item[0] + ', ' + item[1] + ')');
+    }
+</script>

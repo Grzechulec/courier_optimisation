@@ -1,0 +1,32 @@
+body, h1, h3, p {
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    display: flex;
+    min-width: 55vw;
+}
+
+.left {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #f2f2e2;
+    padding: 20px;
+}
+
+.right {
+    background-color: #f2f2f2;
+    padding: 20px;
+}
+
+.top, .bottom {
+    padding: 10px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+h3 {
+    margin-bottom: 10px;
+}
