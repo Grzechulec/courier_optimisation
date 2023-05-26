@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using courierOptimisation.Models;
+using Microsoft.AspNetCore.Mvc;
 
 namespace courierOptimisation
 {
@@ -10,7 +11,7 @@ namespace courierOptimisation
         } 
         
         //to test
-        public static List<List<int>> GenerateDistanceMatrix(List<(int, int)> points)
+        public static List<List<int>> GenerateDistanceMatrix(List<PointModel> points)
         {
             List<List<int>> distanceMatrix = new();
             foreach (var point in points)
@@ -21,7 +22,7 @@ namespace courierOptimisation
         }
 
         //to test
-        public static void AddPoint((int, int) point, List<(int, int)> points, List<List<int>> distanceMatrix)
+        public static void AddPoint(PointModel point, List<PointModel> points, List<List<int>> distanceMatrix)
         {
             if (distanceMatrix.Count == 0)
             {
@@ -35,13 +36,13 @@ namespace courierOptimisation
             AddNewRow(point, points, distanceMatrix);
         }
 
-        private static void UpdateRow((int, int) newPoint, (int, int) rowPoint, List<int> row)
+        private static void UpdateRow(PointModel newPoint, PointModel rowPoint, List<int> row)
         {
             int distance = GetDistance(newPoint, rowPoint);
             row.Add(distance);
         }
 
-        private static void AddNewRow((int, int) newPoint, List<(int, int)> points, List<List<int>> distanceMatrix)
+        private static void AddNewRow(PointModel newPoint, List<PointModel> points, List<List<int>> distanceMatrix)
         {
             List<int> row = new();
             for (int i = 0; i < distanceMatrix.Count; i++)
@@ -52,18 +53,18 @@ namespace courierOptimisation
             distanceMatrix.Add(row);
         }
 
-        private static int GetDistance((int,int) point1, (int, int) point2)
+        private static int GetDistance(PointModel point1, PointModel point2)
         {
-            return (int)Math.Sqrt(Math.Pow(point2.Item1 - point1.Item1, 2) + Math.Pow(point2.Item2 - point1.Item2, 2));
+            return (int)Math.Sqrt(Math.Pow(point2.X - point1.X, 2) + Math.Pow(point2.Y - point1.Y, 2));
         }
 
-        public static List<(int, int)> ConvertStringsToPoints(List<string> strings)
+        public static List<PointModel> ConvertStringsToPoints(List<string> strings)
         {
-            List<(int, int)> points = new();
+            List<PointModel> points = new();
             foreach (string s in strings)
             {
                 string[] numbers = s.Split(' ');
-                points.Add((int.Parse(numbers[0]), int.Parse(numbers[1])));
+                points.Add( new PointModel(int.Parse(numbers[0]), int.Parse(numbers[1])));
             }
             return points;
         }

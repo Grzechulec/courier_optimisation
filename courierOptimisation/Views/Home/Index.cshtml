@@ -27,7 +27,7 @@
         <div class="top">
             @foreach (var point in Model.Points)
             {
-                @String.Join(", ", point);
+                @point.PrintPoint();
                 <br />
             }
         </div>
