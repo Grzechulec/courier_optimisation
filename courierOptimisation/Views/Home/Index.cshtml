@@ -48,22 +48,25 @@
     var canvas = document.getElementById('myCanvas');
     var context = canvas.getContext('2d');
 
-    // Tutaj możesz dodać kod do rysowania na canvas
     context.fillStyle = 'lightgray';
     context.fillRect(0, 0, canvas.width, canvas.height);
-    // Przykładowe rysowanie prostokąta
     context.fillStyle = 'red';
-    context.fillRect(50, 50, 200, 100);
 
-    console.log(@Html.Raw(Json.Serialize(Model.Points)));
-    var myList = [];
-    @foreach (var point in Model.Points)
-    {
-        
-    }
-    // Przykładowe użycie listy w JavaScript
-    for (var i = 0; i < myList.length; i++) {
-        var item = myList[i];
-        console.log('Item ' + (i + 1) + ': (' + item[0] + ', ' + item[1] + ')');
-    }
+    var json = '@Html.Raw(Model.Json)';
+    var points = JSON.parse(json);
+
+    points.forEach(point => {
+        console.log('Punkt: (' + point.X + ', ' + point.Y + ')');
+        context.fillRect(point.X*(canvas.width/100), point.Y*(canvas.height/100), 10, 10);
+    });
+
+    context.fillStyle = 'blue';
+    context.beginPath();
+    context.moveTo(points[0].X * (canvas.width / 100), points[0].Y * (canvas.height / 100));
+    context.lineTo(points[3].X * (canvas.width / 100), points[3].Y * (canvas.height / 100));
+    context.lineTo(points[4].X * (canvas.width / 100), points[4].Y * (canvas.height / 100));
+    context.lineTo(points[8].X * (canvas.width / 100), points[8].Y * (canvas.height / 100));
+    context.lineTo(points[9].X * (canvas.width / 100), points[9].Y * (canvas.height / 100));
+    context.lineTo(points[0].X * (canvas.width / 100), points[0].Y * (canvas.height / 100));
+    context.stroke();
 </script>
