@@ -34,6 +34,7 @@ namespace courierOptimisation.Controllers
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
             string test = _model.PointsToJson();
+            _model.PathsToJson();
             return View("Index", _model);
         }
 
