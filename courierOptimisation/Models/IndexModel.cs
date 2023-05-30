@@ -7,6 +7,7 @@ namespace courierOptimisation.Models
         public List<List<int>> Paths { get; set; }
         public List<List<int>> DistanceMatrix  { get; set; }
         public List<PointModel> Points { get; set; }
+        public List<int> Weights { get; set; }
         public string? JsonPoints { get; set; } = null;
         public string? JsonPaths { get; set; } = null;
         public IndexModel()
@@ -14,6 +15,7 @@ namespace courierOptimisation.Models
             Paths = new List<List<int>>();
             DistanceMatrix = new List<List<int>>();
             Points = new List<PointModel>();
+            Weights = new List<int>();
         }
         public string PointsToJson()
         {

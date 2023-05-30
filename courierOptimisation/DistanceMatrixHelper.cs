@@ -68,5 +68,16 @@ namespace courierOptimisation
             }
             return points;
         }
+
+        public static List<int> ConvertStringsToWeights(List<string> strings)
+        {
+            List<int> weights = new();
+            foreach (string s in strings)
+            {
+                string[] numbers = s.Split(' ');
+                weights.Add(int.Parse(numbers[2]));
+            }
+            return weights;
+        }
     }
 }

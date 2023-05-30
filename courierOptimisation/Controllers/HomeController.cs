@@ -31,9 +31,10 @@ namespace courierOptimisation.Controllers
         {
             _model.DistanceMatrix = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
             _pathsFinder._distanceMatrix = _model.DistanceMatrix;
+            _pathsFinder._clientsWeights = _model.Weights;
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
-            string test = _model.PointsToJson();
+            _model.PointsToJson();
             _model.PathsToJson();
             return View("Index", _model);
         }
@@ -55,6 +56,7 @@ namespace courierOptimisation.Controllers
                 }
             }
             _model.Points = DistanceMatrixHelper.ConvertStringsToPoints(fileContent);
+            _model.Weights = DistanceMatrixHelper.ConvertStringsToWeights(fileContent);
 
             return View("Index", _model);
         }

@@ -26,7 +26,7 @@ namespace courierOptimisation
         private const int _carCapacity = 15;
         //private readonly List<int> _clientsWeights = new() { 0, 9, 4, 1, 10, 5 };
         //private readonly List<int> _clientsWeights = new() { 0, 1, 1, 2, 4, 2, 4, 8, 8, 1, 2, 1, 2, 4, 4, 8, 8 };
-        private readonly List<int> _clientsWeights = new() { 0, 1, 1, 2, 4, 2, 4, 8, 8, 1 };
+        public List<int> _clientsWeights = new() { 0, 1, 1, 2, 4, 2, 4, 8, 8 };
         private List<List<int>> _paths = new();
         private List<int> _pathsWeights = new();
         private int _currentCost;
@@ -65,7 +65,7 @@ namespace courierOptimisation
 
         public PathsFinder()
         {
-            this.generateInitialPaths();
+
         }
 
         public void generateInitialPaths() {
@@ -109,6 +109,7 @@ namespace courierOptimisation
 
         public void traverseSolutions()
         {
+            generateInitialPaths();
             int iterations = (int)(300 * Math.Sqrt(_clientsWeights.Count));
             for (int i = 0; i < iterations; ++i)
             {
