@@ -1,8 +1,81 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
+<body>
+    <link rel="stylesheet" type="text/css" href="~/style.css" />
+</body>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<input type="button"
+       value="Generate Paths"
+       onclick="location.href='@Url.Action("Test", "Home")'" />
+
+
+@using (Html.BeginForm("Upload", "Home", FormMethod.Post, new { enctype = "multipart/form-data" }))
+{
+    <input type="file" name="file" />
+    <input type="submit" value="Wyślij" />
+}
+
+
+<div class="container">
+    <div class="left">
+        <div class="top">
+            @foreach (var point in Model.Points)
+            {
+                @point.PrintPoint();
+                <br />
+            }
+        </div>
+        <div class="bottom">
+            @foreach (var path in Model.Paths)
+            {
+                @String.Join(" ", path);
+                <br />
+            }
+        </div>
+    </div>
+    <div class="right">
+        <canvas id="myCanvas" width="500" height="500"></canvas>
+    </div>
 </div>
+
+<script>
+    var canvas = document.getElementById('myCanvas');
+    var context = canvas.getContext('2d');
+
+    context.fillStyle = 'lightgray';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = 'red';
+    context.font = "12px Arial";
+
+    var json = '@Html.Raw(Model.JsonPoints)';
+    var points = JSON.parse(json);
+
+    for(var i=0; i<points.length; i++){
+        context.fillRect(points[i].X * (canvas.width / 100) - 5, points[i].Y * (canvas.height / 100) - 5, 10, 10);
+        context.strokeText(i, points[i].X * (canvas.width / 100) + 5, points[i].Y * (canvas.height / 100) - 7)
+    }
+
+    json = '@Html.Raw(Model.JsonPaths)';
+    console.log(json);
+    var paths = JSON.parse(json);
+
+    paths.forEach(row =>{
+        console.log(row);
+    });
+
+    var i = 0;
+    var colors = ["red", "blue", "green", "purple", "brown"]
+
+    paths.forEach(path => {
+        context.beginPath();
+        context.moveTo(points[path[0]].X * (canvas.width / 100), points[path[0]].Y * (canvas.height / 100));
+        path.forEach(location => {
+            context.lineTo(points[location].X * (canvas.width / 100), points[location].Y * (canvas.height / 100));
+        });
+        context.strokeStyle = colors[i % 5];
+        context.stroke();
+        i = i+1;
+    });
+</script>
