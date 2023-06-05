@@ -34,7 +34,6 @@ namespace courierOptimisation.Controllers
             _pathsFinder._clientsWeights = _model.Weights;
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
-            _model.PointsToJson();
             _model.PathsToJson();
             return View("Index", _model);
         }
@@ -42,6 +41,8 @@ namespace courierOptimisation.Controllers
         [HttpPost]
         public IActionResult Upload(IFormFile file)
         {
+            _model.Paths.Clear();
+            _model.Points.Clear();
             List<string> fileContent = new();
 
             if (file != null)
@@ -57,7 +58,8 @@ namespace courierOptimisation.Controllers
             }
             _model.Points = DistanceMatrixHelper.ConvertStringsToPoints(fileContent);
             _model.Weights = DistanceMatrixHelper.ConvertStringsToWeights(fileContent);
-
+            _model.PointsToJson();
+            _model.PathsToJson();
             return View("Index", _model);
         }
 

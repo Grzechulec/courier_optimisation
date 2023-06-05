@@ -5,8 +5,16 @@ body, h1, h3, p {
 
 .container {
     display: flex;
-    min-width: 55vw;
+    flex-direction: row;
 }
+
+/*
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}*/
+
 
 .left {
     flex-grow: 1;
@@ -14,6 +22,7 @@ body, h1, h3, p {
     flex-direction: column;
     background-color: #f2f2e2;
     padding: 20px;
+    min-width: 150px;
 }
 
 .right {

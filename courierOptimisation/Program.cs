@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IndexModel, IndexModel>();
-builder.Services.AddSingleton<PathsFinder, PathsFinder>();
+builder.Services.AddScoped<PathsFinder, PathsFinder>();
 
 var app = builder.Build();
 
