@@ -3,4 +3,16 @@
 }
 <h1>@ViewData["Title"]</h1>
 
-<p>Projekt został stworzony przez trzech studentów w celu uzyskania zaliczenia z przedmiotu.</p>
+<p>
+    W ramach projektu postanowiono zrealizować rozszerzenie problemu VRP zwane Capacitated Vehicle Routing Problem (CVRP).
+    Problem ten polega na znalezieniu optymalnej trasy dla n-pojazdów mających za zadanie odwiedzić poszczególne punkty 
+    dostawy uwzględniając ograniczenie pojemności pojazdów.
+
+    Zadaniem algorytmu jest uzyskanie przybliżonego rozwiązania problemu przy uwzględnieniu dodatkowej funkcji celu,
+    która minimalizuje liczbę używanych samochodów. Wybrany został algorytm Tabu Search,
+    który po wygenerowaniu rozwiązania początkowego generuje sąsiedztwo i przechodzi do sąsiada o najmniejszym koszcie. 
+    Po czym znowu generuje sąsiedztwo, itd. Po przejściu do sąsiada, na listę tabu wpisywany jest właśnie wykonany ruch,
+    co nie pozwala algorytmowi wrócić do poprzedniego rozwiązania. Algorytm na bieżąco aktualizuje rozwiązanie o najmniejszym
+    dotychczas koszcie i po skończeniu iterowania zapisuje go jako rozwiązanie problemu. Do implementacji algorytmu
+    wykorzystano język C#, a do wizualizacji została stworzona aplikacja webowa.
+</p>
