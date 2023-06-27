@@ -31,6 +31,8 @@ namespace courierOptimisation
         private List<int> _pathsWeights = new();
         private int _currentCost;
         private TabuList _tabuList = new();
+        public int InitCost;
+        public int FinalCost;
 
         public List<List<int>> bestPaths { get; private set; } = new();
         public int bestPathsCost { get; private set; } = int.MaxValue;
@@ -110,6 +112,7 @@ namespace courierOptimisation
         public void traverseSolutions()
         {
             generateInitialPaths();
+            InitCost = _currentCost;
             int iterations = (int)(300 * Math.Sqrt(_clientsWeights.Count));
             for (int i = 0; i < iterations; ++i)
             {
@@ -144,6 +147,7 @@ namespace courierOptimisation
                     this.updateBestPaths();
                 }
             }
+            FinalCost = _currentCost;
         }
 
         private Optional<NeighbourData> getBestNeighbour(Optional<NeighbourData> firstOpt, Optional<NeighbourData> secondOpt)

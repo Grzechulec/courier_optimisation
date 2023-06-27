@@ -35,6 +35,8 @@ namespace courierOptimisation.Controllers
             _pathsFinder.traverseSolutions();
             _model.Paths = _pathsFinder.bestPaths;
             _model.PathsToJson();
+            _model.InitCost = _pathsFinder.InitCost;
+            _model.Cost = _pathsFinder.FinalCost;
             return View("Index", _model);
         }
 

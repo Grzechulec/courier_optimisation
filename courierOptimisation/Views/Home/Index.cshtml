@@ -27,12 +27,16 @@
                 <br />
             }
         </div>
-        <div class="bottom">
+        <div class="mid">
             @foreach (var path in Model.Paths)
             {
                 @String.Join(" ", path);
                 <br />
             }
+        </div>
+        <div class="bottom">
+            Init Cost = @Model.InitCost <br />
+            Final Cost = @Model.Cost
         </div>
     </div>
     <div class="right">

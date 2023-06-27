@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using Microsoft.Extensions.Primitives;
+using System.Text.Json;
 
 namespace courierOptimisation.Models
 {
@@ -10,6 +11,8 @@ namespace courierOptimisation.Models
         public List<int> Weights { get; set; }
         public string? JsonPoints { get; set; } = null;
         public string? JsonPaths { get; set; } = null;
+        public int InitCost { get; set; } = 0;
+        public int Cost { get; set; } = 0;
         public IndexModel()
         {
             Paths = new List<List<int>>();
