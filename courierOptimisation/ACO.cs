@@ -5,11 +5,11 @@
         private int numberOfCities;
         private int numberOfAnts;
         private double alpha, beta, evaporationRate;
-        private double[,] distanceMatrix;
-        private double[,] pheromoneMatrix;
+        private List<List<double>> distanceMatrix;
+        private List<List<double>> pheromoneMatrix;
         private List<Ant> ants;
 
-        public ACO(int numberOfCities, int numberOfAnts, double alpha, double beta, double evaporationRate, double[,] distanceMatrix)
+        public ACO(int numberOfCities, int numberOfAnts, double alpha, double beta, double evaporationRate, List<List<double>> distanceMatrix)
         {
             this.numberOfCities = numberOfCities;
             this.numberOfAnts = numberOfAnts;
@@ -18,7 +18,7 @@
             this.evaporationRate = evaporationRate;
             this.distanceMatrix = distanceMatrix;
 
-            pheromoneMatrix = new double[numberOfCities, numberOfCities];
+            pheromoneMatrix = new();
             InitializePheromoneMatrix();
 
             ants = new List<Ant>();
@@ -43,12 +43,57 @@
 
         private void InitializePheromoneMatrix()
         {
-            // Inicjalizacja macierzy feromonów
+            double initialPheromoneValue = 1.0 / (numberOfCities * GetAverageDistance(distanceMatrix));
+
+            for (int i = 0; i < numberOfCities; i++)
+            {
+                for (int j = 0; j < numberOfCities; j++)
+                {
+                    pheromoneMatrix[i][j] = initialPheromoneValue;
+                }
+            }
+        }
+
+        private double GetAverageDistance(List<List<double>> distanceMatrix)
+        {
+            double totalDistance = 0.0;
+            int count = 0;
+
+            for (int i = 0; i < distanceMatrix.Count; i++)
+            {
+                for (int j = i + 1; j < distanceMatrix[i].Count; j++)
+                {
+                    totalDistance += distanceMatrix[i][j];
+                    count++;
+                }
+            }
+
+            return count > 0 ? totalDistance / count : 0.0;
         }
 
         private void UpdatePheromoneMatrix()
         {
-            // Aktualizacja macierzy feromonów
+            // Parowanie feromonów
+            for (int i = 0; i < numberOfCities; i++)
+            {
+                for (int j = 0; j < numberOfCities; j++)
+                {
+                    pheromoneMatrix[i][j] *= (1 - evaporationRate);
+                }
+            }
+
+            // Dodawanie nowych feromonów
+            foreach (var ant in ants)
+            {
+                double contribution = 1.0 / ant.TourLength(distanceMatrix);
+                for (int i = 0; i < ant.Tour.Count - 1; i++)
+                {
+                    int cityX = ant.Tour[i];
+                    int cityY = ant.Tour[i + 1];
+                    pheromoneMatrix[cityX][cityY] += contribution;
+                    pheromoneMatrix[cityY][cityX] += contribution; // Symetria ścieżki
+                }
+            }
         }
     }
 
@@ -57,13 +102,35 @@
         private int numberOfCities;
         public List<int> Tour { get; private set; }
 
+        public double TourLength(List<List<double>> distanceMatrix)
+        {
+            double length = 0.0;
+
+            for (int i = 0; i < Tour.Count - 1; i++)
+            {
+                int currentCity = Tour[i];
+                int nextCity = Tour[i + 1];
+                length += distanceMatrix[currentCity][nextCity];
+            }
+
+            // Obejmuje powrót do miasta początkowego, jeśli trasa jest zamknięta
+            if (Tour.Count > 1)
+            {
+                int lastCity = Tour[Tour.Count - 1];
+                int firstCity = Tour[0];
+                length += distanceMatrix[lastCity][firstCity];
+            }
+
+            return length;
+        }
+
         public Ant(int numberOfCities)
         {
             this.numberOfCities = numberOfCities;
             Tour = new List<int>();
         }
 
-        public void BuildTour(double[,] pheromoneMatrix, double[,] distanceMatrix, double alpha, double beta)
+        public void BuildTour(List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, double alpha, double beta)
         {
             // Budowa trasy przez mrówkę
             Tour.Clear();
@@ -79,7 +146,7 @@
             // Dodanie powrotu do miasta początkowego
             Tour.Add(Tour[0]);
         }
-        private int ChooseNextCity(int currentCity, double[,] pheromoneMatrix, double[,] distanceMatrix, double alpha, double beta)
+        private int ChooseNextCity(int currentCity, List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, double alpha, double beta)
         {
             double[] probabilities = new double[numberOfCities];
             double probabilitySum = 0.0;
@@ -88,8 +155,8 @@
             {
                 if (!Tour.Contains(i))
                 {
-                    double pheromone = Math.Pow(pheromoneMatrix[currentCity, i], alpha);
-                    double heuristic = Math.Pow(1.0 / distanceMatrix[currentCity, i], beta);
+                    double pheromone = Math.Pow(pheromoneMatrix[currentCity][i], alpha);
+                    double heuristic = Math.Pow(1.0 / distanceMatrix[currentCity][i], beta);
                     probabilities[i] = pheromone * heuristic;
                     probabilitySum += probabilities[i];
                 }
