@@ -38,8 +38,25 @@
                 }
 
                 UpdatePheromoneMatrix();
+                UpdateShortestPath();
             }
         }
+
+        private void UpdateShortestPath()
+        {
+            double shortestPath = double.MaxValue;
+
+            foreach (var ant in ants)
+            {
+                double tourLength = ant.TourLength(distanceMatrix);
+
+                if (tourLength < shortestPath)
+                {
+                    shortestPath = tourLength;
+                }
+            }
+        }
+
 
         private void InitializePheromoneMatrix()
         {
