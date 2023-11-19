@@ -69,7 +69,7 @@ namespace courierOptimisation
         }
 
 
-        private void InitializePheromoneMatrix()
+        public void InitializePheromoneMatrix()
         {
             double initialPheromoneValue = 1.0 / (options.NumberOfCities * GetAverageDistance(distanceMatrix));
 
