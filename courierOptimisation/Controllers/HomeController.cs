@@ -13,13 +13,15 @@ namespace courierOptimisation.Controllers
         private readonly ILogger<HomeController> _logger;
         private IndexModel _model;
         private PathsFinder _pathsFinder;
+        private ACO _aco;
 
         public HomeController(ILogger<HomeController> logger,
-            IndexModel model, PathsFinder pathsFinder)
+            IndexModel model, PathsFinder pathsFinder, ACO aco)
         {
             _logger = logger;
             _model = model;
             _pathsFinder = pathsFinder;
+            _aco = aco;
         }
 
         public IActionResult Index()
@@ -30,13 +32,17 @@ namespace courierOptimisation.Controllers
         public IActionResult Test()
         {
             _model.DistanceMatrix = DistanceMatrixHelper.GenerateDistanceMatrix(_model.Points);
-            _pathsFinder._distanceMatrix = _model.DistanceMatrix;
-            _pathsFinder._clientsWeights = _model.Weights;
-            _pathsFinder.traverseSolutions();
-            _model.Paths = _pathsFinder.bestPaths;
+            //_pathsFinder._distanceMatrix = _model.DistanceMatrix;
+            //_pathsFinder._clientsWeights = _model.Weights;
+            //_pathsFinder.traverseSolutions();
+            _aco.distanceMatrix = _model.DistanceMatrix.Select(intList => intList.Select(intValue => (double)intValue).ToList()).ToList();
+            _aco.Run(1000);
+            _model.Paths = new List<List<int>> { _aco.shortestTour };
             _model.PathsToJson();
-            _model.InitCost = _pathsFinder.InitCost;
-            _model.Cost = _pathsFinder.FinalCost;
+            _model.InitCost = 0;
+            _model.Cost = 0;
+            //_model.InitCost = _pathsFinder.InitCost;
+            //_model.Cost = _pathsFinder.FinalCost;
             return View("Index", _model);
         }
 

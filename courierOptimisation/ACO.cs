@@ -1,30 +1,38 @@
-﻿namespace courierOptimisation
+﻿using Microsoft.Extensions.Options;
+
+namespace courierOptimisation
 {
+    public class ACOOptions
+    {
+        public int NumberOfCities { get; set; }
+        public int NumberOfAnts { get; set; }
+        public double Alpha { get; set; }
+        public double Beta { get; set; }
+        public double EvaporationRate { get; set; }
+    }
     public class ACO
     {
-        private int numberOfCities;
-        private int numberOfAnts;
-        private double alpha, beta, evaporationRate;
-        private List<List<double>> distanceMatrix;
+        private ACOOptions options;
+        public List<List<double>> distanceMatrix;
         private List<List<double>> pheromoneMatrix;
         private List<Ant> ants;
+        public List<int> shortestTour;
+        public double shortestPath;
 
-        public ACO(int numberOfCities, int numberOfAnts, double alpha, double beta, double evaporationRate, List<List<double>> distanceMatrix)
+        public ACO(IOptions<ACOOptions> optionsAccessor)
         {
-            this.numberOfCities = numberOfCities;
-            this.numberOfAnts = numberOfAnts;
-            this.alpha = alpha;
-            this.beta = beta;
-            this.evaporationRate = evaporationRate;
-            this.distanceMatrix = distanceMatrix;
+            this.distanceMatrix = new List<List<double>>();
+            this.pheromoneMatrix = new List<List<double>>();
+            this.options = optionsAccessor.Value;
+            this.shortestTour = new();
 
             pheromoneMatrix = new();
             InitializePheromoneMatrix();
 
             ants = new List<Ant>();
-            for (int i = 0; i < numberOfAnts; i++)
+            for (int i = 0; i < options.NumberOfAnts; i++)
             {
-                ants.Add(new Ant(numberOfCities));
+                ants.Add(new Ant(options.NumberOfCities));
             }
         }
 
@@ -34,12 +42,13 @@
             {
                 foreach (var ant in ants)
                 {
-                    ant.BuildTour(pheromoneMatrix, distanceMatrix, alpha, beta);
+                    ant.BuildTour(pheromoneMatrix, distanceMatrix, options.Alpha, options.Beta);
                 }
 
                 UpdatePheromoneMatrix();
                 UpdateShortestPath();
             }
+
         }
 
         private void UpdateShortestPath()
@@ -53,18 +62,23 @@
                 if (tourLength < shortestPath)
                 {
                     shortestPath = tourLength;
+                    shortestTour = ant.Tour;
                 }
             }
+            this.shortestPath = shortestPath;
         }
 
 
         private void InitializePheromoneMatrix()
         {
-            double initialPheromoneValue = 1.0 / (numberOfCities * GetAverageDistance(distanceMatrix));
+            double initialPheromoneValue = 1.0 / (options.NumberOfCities * GetAverageDistance(distanceMatrix));
 
-            for (int i = 0; i < numberOfCities; i++)
+            for (int i = 0; i < options.NumberOfCities; i++)
             {
-                for (int j = 0; j < numberOfCities; j++)
+                List<double> row = new List<double>(new double[options.NumberOfCities]);
+                pheromoneMatrix.Add(row);
+
+                for (int j = 0; j < options.NumberOfCities; j++)
                 {
                     pheromoneMatrix[i][j] = initialPheromoneValue;
                 }
@@ -91,11 +105,11 @@
         private void UpdatePheromoneMatrix()
         {
             // Parowanie feromonów
-            for (int i = 0; i < numberOfCities; i++)
+            for (int i = 0; i < options.NumberOfCities; i++)
             {
-                for (int j = 0; j < numberOfCities; j++)
+                for (int j = 0; j < options.NumberOfCities; j++)
                 {
-                    pheromoneMatrix[i][j] *= (1 - evaporationRate);
+                    pheromoneMatrix[i][j] *= (1 - options.EvaporationRate);
                 }
             }
 

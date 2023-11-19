@@ -1,5 +1,6 @@
 using courierOptimisation;
 using courierOptimisation.Models;
+using Microsoft.Extensions.Configuration;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllersWithViews();
 builder.Services.AddSingleton<IndexModel, IndexModel>();
 builder.Services.AddScoped<PathsFinder, PathsFinder>();
+builder.Services.Configure<ACOOptions>(builder.Configuration.GetSection("ACOSettings"));
+builder.Services.AddScoped<ACO>();
 
 var app = builder.Build();
 
