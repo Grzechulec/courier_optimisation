@@ -9,14 +9,16 @@ namespace courierOptimisation
         public double Alpha { get; set; }
         public double Beta { get; set; }
         public double EvaporationRate { get; set; }
+        public int VehicleCapacity { get; set; }
     }
     public class ACO
     {
         private ACOOptions options;
         public List<List<double>> distanceMatrix;
         private List<List<double>> pheromoneMatrix;
+        public List<int> demands;
         private List<Ant> ants;
-        public List<int> shortestTour;
+        public List<List<int>> shortestTours;
         public double shortestPath;
 
         public ACO(IOptions<ACOOptions> optionsAccessor)
@@ -24,7 +26,7 @@ namespace courierOptimisation
             this.distanceMatrix = new List<List<double>>();
             this.pheromoneMatrix = new List<List<double>>();
             this.options = optionsAccessor.Value;
-            this.shortestTour = new();
+            this.shortestTours = new();
 
             pheromoneMatrix = new();
             InitializePheromoneMatrix();
@@ -32,7 +34,7 @@ namespace courierOptimisation
             ants = new List<Ant>();
             for (int i = 0; i < options.NumberOfAnts; i++)
             {
-                ants.Add(new Ant(options.NumberOfCities));
+                ants.Add(new Ant(options.NumberOfCities, options.VehicleCapacity));
             }
         }
 
@@ -42,7 +44,7 @@ namespace courierOptimisation
             {
                 foreach (var ant in ants)
                 {
-                    ant.BuildTour(pheromoneMatrix, distanceMatrix, options.Alpha, options.Beta);
+                    ant.BuildTour(pheromoneMatrix, distanceMatrix, demands, options.Alpha, options.Beta);
                 }
 
                 UpdatePheromoneMatrix();
@@ -62,7 +64,7 @@ namespace courierOptimisation
                 if (tourLength < shortestPath)
                 {
                     shortestPath = tourLength;
-                    shortestTour = ant.Tour;
+                    shortestTours = ant.Tours;
                 }
             }
             this.shortestPath = shortestPath;
@@ -117,12 +119,15 @@ namespace courierOptimisation
             foreach (var ant in ants)
             {
                 double contribution = 1.0 / ant.TourLength(distanceMatrix);
-                for (int i = 0; i < ant.Tour.Count - 1; i++)
+                foreach (var tour in ant.Tours)
                 {
-                    int cityX = ant.Tour[i];
-                    int cityY = ant.Tour[i + 1];
-                    pheromoneMatrix[cityX][cityY] += contribution;
-                    pheromoneMatrix[cityY][cityX] += contribution; // Symetria ścieżki
+                    for (int i = 0; i < tour.Count - 1; i++)
+                    {
+                        int cityX = tour[i];
+                        int cityY = tour[i + 1];
+                        pheromoneMatrix[cityX][cityY] += contribution;
+                        pheromoneMatrix[cityY][cityX] += contribution; // Symetria ścieżki
+                    }
                 }
             }
         }
@@ -131,60 +136,91 @@ namespace courierOptimisation
     class Ant
     {
         private int numberOfCities;
-        public List<int> Tour { get; private set; }
+        public List<List<int>> Tours { get; private set; }
+        private int vehicleCapacity;
 
         public double TourLength(List<List<double>> distanceMatrix)
         {
             double length = 0.0;
-
-            for (int i = 0; i < Tour.Count - 1; i++)
+            foreach (List<int> tour in Tours)
             {
-                int currentCity = Tour[i];
-                int nextCity = Tour[i + 1];
-                length += distanceMatrix[currentCity][nextCity];
-            }
+                for (int i = 0; i < tour.Count - 1; i++)
+                {
+                    int currentCity = tour[i];
+                    int nextCity = tour[i + 1];
+                    length += distanceMatrix[currentCity][nextCity];
+                }
 
-            // Obejmuje powrót do miasta początkowego, jeśli trasa jest zamknięta
-            if (Tour.Count > 1)
-            {
-                int lastCity = Tour[Tour.Count - 1];
-                int firstCity = Tour[0];
-                length += distanceMatrix[lastCity][firstCity];
+                // Obejmuje powrót do miasta początkowego, jeśli trasa jest zamknięta
+                if (tour.Count > 1)
+                {
+                    int lastCity = tour[tour.Count - 1];
+                    int firstCity = tour[0];
+                    length += distanceMatrix[lastCity][firstCity];
+                }
             }
-
             return length;
         }
 
-        public Ant(int numberOfCities)
+        public Ant(int numberOfCities, int vehicleCapacity)
         {
             this.numberOfCities = numberOfCities;
-            Tour = new List<int>();
+            this.vehicleCapacity = vehicleCapacity;
+            Tours = new List<List<int>>();
         }
 
-        public void BuildTour(List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, double alpha, double beta)
+        public void BuildTour(List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, List<int> demands, double alpha, double beta)
         {
-            // Budowa trasy przez mrówkę
-            Tour.Clear();
-            Tour.Add(0); // Losowe miasto początkowe
+            Tours.Clear();
+            Tours.Add(new List<int> { 0 }); // Start with depot as first city in the first tour
 
-            while (Tour.Count < numberOfCities)
+            while (Tours.Sum(t => t.Count) < numberOfCities)
             {
-                int currentCity = Tour.Last();
-                int nextCity = ChooseNextCity(currentCity, pheromoneMatrix, distanceMatrix, alpha, beta);
-                Tour.Add(nextCity);
-            }
+                foreach (var tour in Tours)
+                {
+                    while (CanAddMoreCities(tour, demands))
+                    {
+                        int currentCity = tour.Last();
+                        int nextCity = ChooseNextCity(currentCity, pheromoneMatrix, distanceMatrix, demands, alpha, beta, tour);
+                        if (nextCity == -1) // No feasible city found
+                        {
+                            break;
+                        }
+                        tour.Add(nextCity);
+                    }
+                }
 
-            // Dodanie powrotu do miasta początkowego
-            Tour.Add(Tour[0]);
+                // Add a new tour if not all cities are covered
+                if (Tours.Sum(t => t.Count) - Tours.Count < numberOfCities) // Subtract Tours.Count to exclude depots
+                {
+                    Tours.Add(new List<int> { 0 }); // Start new tour from depot
+                }
+            }
         }
-        private int ChooseNextCity(int currentCity, List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, double alpha, double beta)
+
+        private bool CanAddMoreCities(List<int> tour, List<int> demands)
+        {
+            int currentLoad = tour.Sum(city => demands[city]);
+            return currentLoad < vehicleCapacity && tour.Count < numberOfCities;
+        }
+
+        private int getCurrentLoad(List<int> tour, List<int> demands)
+        {
+            int sum = 0;
+            foreach (int  city in tour)
+            {
+                sum += demands[city];
+            }
+            return sum;
+        }
+        private int ChooseNextCity(int currentCity, List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, List<int> demands, double alpha, double beta, List<int> currentTour)
         {
             double[] probabilities = new double[numberOfCities];
             double probabilitySum = 0.0;
 
             for (int i = 0; i < numberOfCities; i++)
             {
-                if (!Tour.Contains(i))
+                if (!Tours.Any(x => x.Contains(i)) && getCurrentLoad(currentTour, demands) + demands[i] <= vehicleCapacity)
                 {
                     double pheromone = Math.Pow(pheromoneMatrix[currentCity][i], alpha);
                     double heuristic = Math.Pow(1.0 / distanceMatrix[currentCity][i], beta);
@@ -197,14 +233,14 @@ namespace courierOptimisation
             double randomPoint = new Random().NextDouble() * probabilitySum;
             for (int i = 0; i < probabilities.Length; i++)
             {
-                if (!Tour.Contains(i))
+                if (!Tours.Any(x => x.Contains(i)))
                 {
                     randomPoint -= probabilities[i];
                     if (randomPoint <= 0) return i;
                 }
             }
 
-            return Tour[0]; // W przypadku błędu, powrót do miasta początkowego
+            return 0; // W przypadku błędu, powrót do miasta początkowego
         }
     }
 }
