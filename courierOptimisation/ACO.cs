@@ -188,14 +188,21 @@ namespace courierOptimisation
                         }
                         tour.Add(nextCity);
                     }
+                    if (tour.Count > 1 && tour.Last() != 0)
+                    {
+                        tour.Add(0);
+                    }
                 }
+                
 
                 // Add a new tour if not all cities are covered
                 if (Tours.Sum(t => t.Count) - Tours.Count < numberOfCities) // Subtract Tours.Count to exclude depots
                 {
                     Tours.Add(new List<int> { 0 }); // Start new tour from depot
                 }
+
             }
+
         }
 
         private bool CanAddMoreCities(List<int> tour, List<int> demands)
