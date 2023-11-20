@@ -73,6 +73,7 @@ namespace courierOptimisation
 
         public void InitializePheromoneMatrix()
         {
+            pheromoneMatrix.Clear();
             double initialPheromoneValue = 1.0 / (options.NumberOfCities * GetAverageDistance(distanceMatrix));
 
             for (int i = 0; i < options.NumberOfCities; i++)
@@ -144,7 +145,7 @@ namespace courierOptimisation
             double length = 0.0;
             foreach (List<int> tour in Tours)
             {
-                for (int i = 0; i < tour.Count - 1; i++)
+                for (int i = 0; i < tour.Count -1; i++)
                 {
                     int currentCity = tour[i];
                     int nextCity = tour[i + 1];
@@ -152,12 +153,12 @@ namespace courierOptimisation
                 }
 
                 // Obejmuje powrót do miasta początkowego, jeśli trasa jest zamknięta
-                if (tour.Count > 1)
+                /*if (tour.Count > 1)
                 {
                     int lastCity = tour[tour.Count - 1];
                     int firstCity = tour[0];
                     length += distanceMatrix[lastCity][firstCity];
-                }
+                }*/
             }
             return length;
         }
@@ -174,7 +175,7 @@ namespace courierOptimisation
             Tours.Clear();
             Tours.Add(new List<int> { 0 }); // Start with depot as first city in the first tour
 
-            while (Tours.Sum(t => t.Count) < numberOfCities)
+            while (Tours.SelectMany(list => list).Count(item => item != 0) < numberOfCities-1)
             {
                 foreach (var tour in Tours)
                 {
@@ -193,10 +194,9 @@ namespace courierOptimisation
                         tour.Add(0);
                     }
                 }
-                
 
                 // Add a new tour if not all cities are covered
-                if (Tours.Sum(t => t.Count) - Tours.Count < numberOfCities) // Subtract Tours.Count to exclude depots
+                if (Tours.Sum(t => t.Count) - Tours.SelectMany(list => list).Count(item => item == 0) + 1 < numberOfCities) // Subtract Tours.Count to exclude depots
                 {
                     Tours.Add(new List<int> { 0 }); // Start new tour from depot
                 }
@@ -247,7 +247,7 @@ namespace courierOptimisation
                 }
             }
 
-            return 0; // W przypadku błędu, powrót do miasta początkowego
+            return -1; // W przypadku błędu, powrót do miasta początkowego
         }
     }
 }

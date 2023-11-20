@@ -38,7 +38,7 @@ namespace courierOptimisation.Controllers
             _aco.demands = _model.Weights;
             _aco.distanceMatrix = _model.DistanceMatrix.Select(intList => intList.Select(intValue => (double)intValue).ToList()).ToList();
             _aco.InitializePheromoneMatrix();
-            _aco.Run(10000);
+            _aco.Run(100);
             _model.Paths =_aco.shortestTours;
             _model.PathsToJson();
             _model.InitCost = 0;
