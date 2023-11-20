@@ -40,6 +40,10 @@ namespace courierOptimisation
 
         public void Run(int iterations)
         {
+            if (demands.Any(x => x > options.VehicleCapacity))
+            {
+                throw new Exception("Wymagania ktoregos z miast są większe od pojemności pojazdu");
+            }
             for (int i = 0; i < iterations; i++)
             {
                 foreach (var ant in ants)
@@ -240,7 +244,7 @@ namespace courierOptimisation
             double randomPoint = new Random().NextDouble() * probabilitySum;
             for (int i = 0; i < probabilities.Length; i++)
             {
-                if (!Tours.Any(x => x.Contains(i)))
+                if (!Tours.Any(x => x.Contains(i)) && getCurrentLoad(currentTour, demands) + demands[i] <= vehicleCapacity)
                 {
                     randomPoint -= probabilities[i];
                     if (randomPoint <= 0) return i;
