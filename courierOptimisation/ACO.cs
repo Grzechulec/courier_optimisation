@@ -177,7 +177,7 @@ namespace courierOptimisation
         public void BuildTour(List<List<double>> pheromoneMatrix, List<List<double>> distanceMatrix, List<int> demands, double alpha, double beta)
         {
             Tours.Clear();
-            Tours.Add(new List<int> { 0 }); // Start with depot as first city in the first tour
+            Tours.Add(new List<int> { 0 }); // dodanie do listy punktu początkowego
 
             while (Tours.SelectMany(list => list).Count(item => item != 0) < numberOfCities-1)
             {
@@ -187,7 +187,7 @@ namespace courierOptimisation
                     {
                         int currentCity = tour.Last();
                         int nextCity = ChooseNextCity(currentCity, pheromoneMatrix, distanceMatrix, demands, alpha, beta, tour);
-                        if (nextCity == -1) // No feasible city found
+                        if (nextCity == -1) // jeśli nie zostanie znalezione miasto spełniające kryteria
                         {
                             break;
                         }
@@ -199,10 +199,10 @@ namespace courierOptimisation
                     }
                 }
 
-                // Add a new tour if not all cities are covered
-                if (Tours.Sum(t => t.Count) - Tours.SelectMany(list => list).Count(item => item == 0) + 1 < numberOfCities) // Subtract Tours.Count to exclude depots
+                // tworzenie nowej ścieżki
+                if (Tours.Sum(t => t.Count) - Tours.SelectMany(list => list).Count(item => item == 0) + 1 < numberOfCities) // Tours.Count służy tutaj do wykluczenia z trasy punktu startowego
                 {
-                    Tours.Add(new List<int> { 0 }); // Start new tour from depot
+                    Tours.Add(new List<int> { 0 }); // dodanie do listy punktu startowego
                 }
 
             }
