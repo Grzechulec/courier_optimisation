@@ -42,7 +42,7 @@ namespace courierOptimisation.Controllers
             _model.Paths =_aco.shortestTours;
             _model.PathsToJson();
             _model.InitCost = 0;
-            _model.Cost = 0;
+            _model.Cost = _aco.shortestPath;
             //_model.InitCost = _pathsFinder.InitCost;
             //_model.Cost = _pathsFinder.FinalCost;
             return View("Index", _model);

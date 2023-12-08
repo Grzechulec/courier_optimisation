@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Diagnostics.CodeAnalysis;
 
 namespace courierOptimisation
 {
@@ -27,6 +28,7 @@ namespace courierOptimisation
             this.pheromoneMatrix = new List<List<double>>();
             this.options = optionsAccessor.Value;
             this.shortestTours = new();
+            this.shortestPath = double.MaxValue;
 
             pheromoneMatrix = new();
             InitializePheromoneMatrix();
@@ -38,19 +40,49 @@ namespace courierOptimisation
             }
         }
 
+        private void DoWork(object data)
+        {
+            List<Ant> ants = (List<Ant>)data;
+
+            foreach (var ant in ants)
+            {
+                ant.BuildTour(pheromoneMatrix, distanceMatrix, demands, options.Alpha, options.Beta);
+            }
+        }
+
         public void Run(int iterations)
         {
+            int numberOfThreads = 4;
+            Thread[] threads = new Thread[numberOfThreads];
+
             if (demands.Any(x => x > options.VehicleCapacity))
             {
                 throw new Exception("Wymagania ktoregos z miast są większe od pojemności pojazdu");
             }
+
+            // Incijalizacja i przypisanie do List
+            List<Ant>[] antsToThreads = new List<Ant>[numberOfThreads];
+            for (int i = 0; i < numberOfThreads; i++)
+            {
+                antsToThreads[i] = new List<Ant>();
+            }
+            for (int i=0; i < ants.Count; i++)
+            {
+                antsToThreads[i % numberOfThreads].Add(ants[i]);
+            }
+
             for (int i = 0; i < iterations; i++)
             {
-                foreach (var ant in ants)
+                for (int j = 0; j < numberOfThreads; j++)
                 {
-                    ant.BuildTour(pheromoneMatrix, distanceMatrix, demands, options.Alpha, options.Beta);
+                    threads[j] = new Thread(new ParameterizedThreadStart(DoWork));
+                    threads[j].Start(antsToThreads[j]);
                 }
 
+                for (int j = 0; j < numberOfThreads; j++)
+                {
+                    threads[j].Join();
+                }
                 UpdatePheromoneMatrix();
                 UpdateShortestPath();
             }
@@ -59,19 +91,20 @@ namespace courierOptimisation
 
         private void UpdateShortestPath()
         {
-            double shortestPath = double.MaxValue;
+            //double shortestPath = double.MaxValue;
 
             foreach (var ant in ants)
             {
                 double tourLength = ant.TourLength(distanceMatrix);
 
-                if (tourLength < shortestPath)
+                if (tourLength < this.shortestPath)
                 {
-                    shortestPath = tourLength;
+                    this.shortestPath = tourLength;
                     shortestTours = ant.Tours;
                 }
             }
-            this.shortestPath = shortestPath;
+
+            //this.shortestPath = shortestPath;
         }
 
 

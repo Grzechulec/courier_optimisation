@@ -12,7 +12,7 @@ namespace courierOptimisation.Models
         public string? JsonPoints { get; set; } = null;
         public string? JsonPaths { get; set; } = null;
         public int InitCost { get; set; } = 0;
-        public int Cost { get; set; } = 0;
+        public double Cost { get; set; } = 0;
         public IndexModel()
         {
             Paths = new List<List<int>>();
