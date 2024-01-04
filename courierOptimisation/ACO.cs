@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace courierOptimisation
@@ -52,6 +53,9 @@ namespace courierOptimisation
 
         public void Run(int iterations)
         {
+            Stopwatch sw = new Stopwatch();
+
+            sw.Start();
             int numberOfThreads = 4;
             Thread[] threads = new Thread[numberOfThreads];
 
@@ -86,7 +90,8 @@ namespace courierOptimisation
                 UpdatePheromoneMatrix();
                 UpdateShortestPath();
             }
-
+            sw.Stop();
+            Debug.WriteLine("Elapsed={0}", sw.Elapsed);
         }
 
         private void UpdateShortestPath()
